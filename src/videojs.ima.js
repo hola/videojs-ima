@@ -388,7 +388,7 @@
     this.onContentPauseRequested_ = function(adEvent) {
       this.adsActive = true;
       this.adPlaying = true;
-      this.player.off('ended', this.localContentEndedListener);
+      this.player.off('contentended', this.localContentEndedListener);
       if (adEvent.getAd().getAdPodInfo().getPodIndex() != -1) {
         // Skip this call for post-roll ads
         this.player.ads.startLinearAdMode();
@@ -415,7 +415,7 @@
     this.onContentResumeRequested_ = function(adEvent) {
       this.adsActive = false;
       this.adPlaying = false;
-      this.player.on('ended', this.localContentEndedListener);
+      this.player.on('contentended', this.localContentEndedListener);
       if (this.currentAd == null || // hide for post-roll only playlist
           this.currentAd.isLinear()) { // don't hide for non-linear ads
         this.adContainerDiv.style.display = 'none';
@@ -767,7 +767,7 @@
     var resetIMA_ = function() {
       this.adsActive = false;
       this.adPlaying = false;
-      this.player.on('ended', this.localContentEndedListener);
+      this.player.on('contentended', this.localContentEndedListener);
       if (this.currentAd && this.currentAd.isLinear()) {
         this.adContainerDiv.style.display = 'none';
       }
@@ -888,8 +888,8 @@
     }.bind(this);
 
     /**
-     * Adds a listener for the 'ended' event of the video player. This should be
-     * used instead of setting an 'ended' listener directly to ensure that the
+     * Adds a listener for the 'contentended' event of the video player. This should be
+     * used instead of setting an 'contentended' listener directly to ensure that the
      * ima can do proper cleanup of the SDK before other event listeners
      * are called.
      * @param {function} listener The listener to be called when content completes.
@@ -1285,7 +1285,7 @@
     this.playerDisposedListener = function(){
       this.contentEndedListeners, this.contentAndAdsEndedListeners = [], [];
       this.contentComplete = true;
-      this.player.off('ended', this.localContentEndedListener);
+      this.player.off('contentended', this.localContentEndedListener);
       var intervalsToClear = [this.updateTimeIntervalHandle, this.seekCheckIntervalHandle,
         this.adTrackingTimer, this.resizeCheckIntervalHandle];
       for (var index in intervalsToClear) {
@@ -1325,7 +1325,7 @@
 
     player.one('play', setUpPlayerIntervals_);
 
-    player.on('ended', this.localContentEndedListener);
+    player.on('contentended', this.localContentEndedListener);
     player.on('dispose', this.playerDisposedListener);
 
     var contrib_ads_defaults = {
