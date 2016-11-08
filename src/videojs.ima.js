@@ -389,10 +389,7 @@
       this.adsActive = true;
       this.adPlaying = true;
       this.player.off('contentended', this.localContentEndedListener);
-      if (adEvent.getAd().getAdPodInfo().getPodIndex() != -1) {
-        // Skip this call for post-roll ads
-        this.player.ads.startLinearAdMode();
-      }
+      this.player.ads.startLinearAdMode();
       this.adContainerDiv.style.display = 'block';
 
       var contentType = adEvent.getAd().getContentType();
@@ -421,14 +418,7 @@
         this.adContainerDiv.style.display = 'none';
       }
       this.vjsControls.show();
-      if (!this.currentAd) {
-        // Something went wrong playing the ad
-        this.player.ads.endLinearAdMode();
-      } else if (!this.contentComplete &&
-          // Don't exit linear mode after post-roll or content will auto-replay
-          this.currentAd.getAdPodInfo().getPodIndex() != -1 ) {
-        this.player.ads.endLinearAdMode();
-      }
+      this.player.ads.endLinearAdMode();
       this.countdownDiv.innerHTML = '';
     }.bind(this);
 
