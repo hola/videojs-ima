@@ -293,6 +293,20 @@
         }
       }
 
+      var cuepoints = this.adsManager.getCuePoints();
+      var foundpreroll = !cuepoints.length; // no playlist, just preroll
+      var foundpostroll = false;;
+      cuepoints.forEach(function(offset){
+          if (!offset)
+              foundpreroll = true;
+          else if (offset==-1)
+              foundpostroll = true;
+      });
+      if (!foundpreroll)
+          this.player.trigger('nopreroll');
+      if (!foundpostroll)
+          this.player.trigger('nopostroll');
+
       this.player.trigger('adsready');
     }.bind(this);
 
