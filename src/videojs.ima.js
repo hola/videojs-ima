@@ -306,6 +306,8 @@
           this.player.trigger('nopreroll');
       if (!foundpostroll)
           this.player.trigger('nopostroll');
+      if (cuepoints.length)
+          this.player.trigger('ads-cuepoints', cuepoints);
 
       this.player.trigger('adsready');
     }.bind(this);
