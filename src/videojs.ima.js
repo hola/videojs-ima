@@ -342,7 +342,7 @@
           this.adsManager.setVolume(this.player.muted() ? 0 : this.player.volume());
           this.adsManager.start();
         } catch (adError) {
-          this.onAdError_(adError);
+          onAdError_(adError);
         }
       }
     }.bind(this);
@@ -370,11 +370,12 @@
      * @private
      */
     var onAdError_ = function(adErrorEvent) {
-      window.console.log('Ad error: ' + adErrorEvent.getError());
+      var errorMessage = adErrorEvent.getError !== undefined ? adErrorEvent.getError() : adErrorEvent.stack;
+      window.console.log('Ad error: ' + errorMessage);
       this.vjsControls.show();
       this.adsManager.destroy();
       this.adContainerDiv.style.display = 'none';
-      this.player.trigger({ type: 'adserror', data: { AdError: adErrorEvent.getError(), AdErrorEvent: adErrorEvent }});
+      this.player.trigger({ type: 'adserror', data: { AdError: errorMessage, AdErrorEvent: adErrorEvent }});
     }.bind(this);
 
     /**
@@ -446,6 +447,7 @@
      */
     var onAllAdsCompleted_ = function(adEvent) {
       this.allAdsCompleted = true;
+      this.adContainerDiv.style.display = 'none';
       if (this.contentComplete == true) {
         for (var index in this.contentAndAdsEndedListeners) {
           this.contentAndAdsEndedListeners[index]();
@@ -1292,6 +1294,12 @@
       this.contentEndedListeners, this.contentAndAdsEndedListeners = [], [];
       this.contentComplete = true;
       this.player.off('contentended', this.localContentEndedListener);
+
+      // Bug fix: https://github.com/googleads/videojs-ima/issues/306
+      if (this.player.ads.adTimeoutTimeout) {
+        clearTimeout(this.player.ads.adTimeoutTimeout);
+      }
+
       var intervalsToClear = [this.updateTimeIntervalHandle, this.seekCheckIntervalHandle,
         this.adTrackingTimer, this.resizeCheckIntervalHandle];
       for (var index in intervalsToClear) {
