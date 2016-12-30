@@ -276,6 +276,24 @@
       this.adsManager.addEventListener(
           google.ima.AdEvent.Type.SKIPPED,
           this.onAdComplete_);
+      this.adsManager.addEventListener(
+          google.ima.AdEvent.Type.FIRST_QUARTILE,
+          function(){ this.player.trigger('ads-first-quartile'); }.bind(this));
+      this.adsManager.addEventListener(
+          google.ima.AdEvent.Type.MIDPOINT,
+          function(){ this.player.trigger('ads-midpoint'); }.bind(this));
+      this.adsManager.addEventListener(
+          google.ima.AdEvent.Type.THIRD_QUARTILE,
+          function(){ this.player.trigger('ads-third-quartile'); }.bind(this));
+      this.adsManager.addEventListener(
+          google.ima.AdEvent.Type.IMPRESSION,
+          function(){ this.player.trigger('ads-impression'); }.bind(this));
+      this.adsManager.addEventListener(
+          google.ima.AdEvent.Type.PAUSED,
+          function(){ this.player.trigger('ads-pause'); }.bind(this));
+      this.adsManager.addEventListener(
+          google.ima.AdEvent.Type.RESUMED,
+          function(){ this.player.trigger('ads-play'); }.bind(this));
 
       if (!this.autoPlayAdBreaks) {
         try {
