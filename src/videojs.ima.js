@@ -468,7 +468,7 @@
       this.allAdsCompleted = true;
       this.adContainerDiv.style.display = 'none';
       if (this.contentComplete == true) {
-        if (this.contentPlayer.src != this.contentSource) {
+        if (this.contentPlayer.src && this.contentPlayer.src != this.contentSource) {
           this.player.src(this.contentSource);
         }
         for (var index in this.contentAndAdsEndedListeners) {
@@ -1353,7 +1353,8 @@
 
     this.controlPrefix = (this.settings.id + '_') || '';
 
-    this.contentPlayer = document.getElementById(this.settings['id'] + '_html5_api');
+    this.contentPlayer = document.getElementById(this.settings['id'] + '_html5_api') ||
+      document.getElementById(this.settings['id'] + '_Flash_api');
     // Default showing countdown timer to true.
     this.showCountdown = true;
     if (this.settings['showCountdown'] == false) {
