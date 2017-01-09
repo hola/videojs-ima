@@ -981,12 +981,21 @@
     }.bind(this);
 
     /**
+     * Updates the start time of the video
+     * @private
+     */
+    var updateStartTime_ = function(){
+        this.contentPlayheadTracker.startTime = this.player.currentTime();
+    }.bind(this);
+
+    /**
      * Updates the current time of the video
      * @private
      */
     var updateCurrentTime_ = function() {
       if (!this.contentPlayheadTracker.seeking) {
-        this.contentPlayheadTracker.currentTime = this.player.currentTime();
+        this.contentPlayheadTracker.currentTime = this.player.currentTime() -
+            this.contentPlayheadTracker.startTime;
       }
     }.bind(this);
 
@@ -1244,7 +1253,8 @@
       currentTime: 0,
       previousTime: 0,
       seeking: false,
-      duration: 0
+      duration: 0,
+      startTime: 0
     };
 
     /**
@@ -1366,6 +1376,7 @@
       this.autoPlayAdBreaks = false;
     }
 
+    player.one('timeupdate', updateStartTime_);
     player.one('play', setUpPlayerIntervals_);
 
     player.on('contentended', this.localContentEndedListener);
