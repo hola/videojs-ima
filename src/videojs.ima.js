@@ -1263,7 +1263,7 @@
       previousTime: 0,
       seeking: false,
       duration: 0,
-      startTime: 0
+      startTime: -1
     };
 
     /**
