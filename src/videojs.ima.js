@@ -989,9 +989,10 @@
         if (!cur)
             return;
         // first time that isn't zero is our start time, but only if it's
-        // more than the seekThreshold
-        if (cur*1000>this.seekThreshold)
-            this.contentPlayheadTracker.startTime = cur;
+        // more than the 1sec
+        if (cur<1)
+            cur = 0;
+        this.contentPlayheadTracker.startTime = cur;
         this.player.off('timeupdate', updateStartTime_);
     }.bind(this);
 
@@ -1000,7 +1001,8 @@
      * @private
      */
     var updateCurrentTime_ = function() {
-      if (!this.contentPlayheadTracker.seeking) {
+      if (!this.contentPlayheadTracker.seeking &&
+          this.contentPlayheadTracker.startTime>=0) {
         this.contentPlayheadTracker.currentTime = this.player.currentTime() -
             this.contentPlayheadTracker.startTime;
       }
