@@ -985,7 +985,14 @@
      * @private
      */
     var updateStartTime_ = function(){
-        this.contentPlayheadTracker.startTime = this.player.currentTime();
+        var cur = this.player.currentTime();
+        if (!cur)
+            return;
+        // first time that isn't zero is our start time, but only if it's
+        // more than the seekThreshold
+        if (cur*1000>this.seekThreshold)
+            this.contentPlayheadTracker.startTime = cur;
+        this.player.off('timeupdate', updateStartTime_);
     }.bind(this);
 
     /**
@@ -1332,6 +1339,7 @@
       this.contentEndedListeners, this.contentAndAdsEndedListeners = [], [];
       this.contentComplete = true;
       this.player.off('contentended', this.localContentEndedListener);
+      this.player.off('timeupdate', updateStartTime_);
 
       // Bug fix: https://github.com/googleads/videojs-ima/issues/306
       if (this.player.ads.adTimeoutTimeout) {
@@ -1376,7 +1384,7 @@
       this.autoPlayAdBreaks = false;
     }
 
-    player.one('timeupdate', updateStartTime_);
+    player.on('timeupdate', updateStartTime_);
     player.one('play', setUpPlayerIntervals_);
 
     player.on('contentended', this.localContentEndedListener);
