@@ -446,6 +446,7 @@
      * @private
      */
     this.onContentResumeRequested_ = function(adEvent) {
+      this.contentResumeTimer = clearTimeout(this.contentResumeTimer);
       this.adsActive = false;
       this.adPlaying = false;
       this.player.on('contentended', this.localContentEndedListener);
@@ -515,6 +516,15 @@
     this.onAdComplete_ = function(adEvent) {
       if (this.currentAd.isLinear()) {
         clearInterval(this.adTrackingTimer);
+        var pod = this.currentAd.getAdPodInfo();
+        if (pod && pod.getAdPosition()<pod.getTotalAds())
+            return;
+        // this is the final ad so we excpect ima sdk to trigger
+        // CONTENT_RESUME_REQUESTED, but for some reason it isn't triggered
+        // reliably on iOS, so we fake it
+        this.contentResumeTimer = setTimeout(function(){
+            this.onContentResumeRequested_(null);
+        }.bind(this), 1000);
       }
     }.bind(this);
 
