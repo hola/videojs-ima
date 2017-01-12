@@ -986,7 +986,7 @@
      */
     var updateStartTime_ = function(){
         var cur = this.player.currentTime();
-        if (!cur)
+        if (!cur || this.player.ads.state!='content-playback')
             return;
         // first time that isn't zero is our start time, but only if it's
         // more than the 1sec
@@ -1001,7 +1001,8 @@
      * @private
      */
     var updateCurrentTime_ = function() {
-      if (!this.contentPlayheadTracker.seeking &&
+      if (this.player.ads.state=='content-playback' &&
+          !this.contentPlayheadTracker.seeking &&
           this.contentPlayheadTracker.startTime>=0) {
         this.contentPlayheadTracker.currentTime = this.player.currentTime() -
             this.contentPlayheadTracker.startTime;
@@ -1019,6 +1020,8 @@
      * @private
      */
     var checkForSeeking_ = function() {
+      if (this.player.ads.state!='content-playback')
+          return;
       var tempCurrentTime = this.player.currentTime();
       var diff = (tempCurrentTime - this.contentPlayheadTracker.previousTime) * 1000;
       if (Math.abs(diff) > this.seekCheckInterval + this.seekThreshold) {
@@ -1386,12 +1389,6 @@
       this.autoPlayAdBreaks = false;
     }
 
-    player.on('timeupdate', updateStartTime_);
-    player.one('play', setUpPlayerIntervals_);
-
-    player.on('contentended', this.localContentEndedListener);
-    player.on('dispose', this.playerDisposedListener);
-
     var contrib_ads_defaults = {
       debug: this.settings.debug,
       timeout: this.settings.timeout,
@@ -1403,6 +1400,10 @@
 
     player.ads(ads_plugin_settings);
 
+    player.one('play', setUpPlayerIntervals_);
+    player.on('contentended', this.localContentEndedListener);
+    player.on('dispose', this.playerDisposedListener);
+    player.on('timeupdate', updateStartTime_);
     this.adsRenderingSettings = new google.ima.AdsRenderingSettings();
     this.adsRenderingSettings.restoreCustomPlaybackStateOnAdBreakComplete = true;
     if (this.settings['adsRenderingSettings']) {
