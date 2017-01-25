@@ -1387,8 +1387,7 @@
 
     this.controlPrefix = (this.settings.id + '_') || '';
 
-    this.contentPlayer = document.getElementById(this.settings['id'] + '_html5_api') ||
-      document.getElementById(this.settings['id'] + '_Flash_api');
+    this.contentPlayer = this.player.$('.vjs-tech');
     // Default showing countdown timer to true.
     this.showCountdown = true;
     if (this.settings['showCountdown'] == false) {
