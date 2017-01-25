@@ -470,7 +470,8 @@
       this.allAdsCompleted = true;
       this.adContainerDiv.style.display = 'none';
       if (this.contentComplete == true) {
-        if (this.contentPlayer.src && this.contentPlayer.src != this.contentSource) {
+        if (this.contentPlayer.src && !/^blob:/.test(this.contentPlayer.src) &&
+          this.contentPlayer.src != this.contentSource) {
           this.player.src(this.contentSource);
         }
         for (var index in this.contentAndAdsEndedListeners) {
