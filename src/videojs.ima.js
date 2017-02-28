@@ -906,6 +906,17 @@
     }.bind(this);
 
     /**
+     * Plays an ad immediately
+     * @param {?string} adTag The ad tag to be requested.
+     *     Leave blank to use the existing ad tag.
+     */
+    this.playAd = function(adTag) {
+      resetIMA_();
+      this.settings.adTagUrl = adTag ? adTag : this.settings.adTagUrl;
+      this.requestAds();
+    }.bind(this);
+
+    /**
      * Changes the player source.
      * @param {?string} contentSrc The URI for the content to be played. Leave
      *     blank to use the existing content.
