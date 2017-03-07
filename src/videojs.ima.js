@@ -352,7 +352,7 @@
      * info, see this method's usage in our advanced and playlist examples.
      */
     this.startFromReadyCallback = function() {
-      if (this.autoPlayAdBreaks) {
+      if (this.autoPlayAdBreaks && this.adsManager) {
         try {
           this.adsManager.init(
               this.getPlayerWidth(),
