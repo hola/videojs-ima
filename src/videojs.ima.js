@@ -506,7 +506,8 @@
         removeClass_(this.adContainerDiv, 'bumpable-ima-ad-container');
       } else {
         // Bump container when controls are shown
-       addClass_(this.adContainerDiv, 'bumpable-ima-ad-container');
+        addClass_(this.adContainerDiv, 'bumpable-ima-ad-container');
+        this.player.addClass('vjs-ima-non-linear');
       }
     }.bind(this);
 
@@ -527,6 +528,8 @@
         this.contentResumeTimer = setTimeout(function(){
             this.onContentResumeRequested_(null);
         }.bind(this), 1000);
+      } else {
+        this.player.removeClass('vjs-ima-non-linear');
       }
     }.bind(this);
 

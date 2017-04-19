@@ -38,6 +38,14 @@
   margin-top: -40px;
 }
 
+.vjs-ima-non-linear .vjs-big-play-button,
+.vjs-ima-non-linear .vjs-rightclick-popup,
+.vjs-ima-non-linear .vjs-info-overlay,
+.vjs-ima-non-linear .vjs-modal-overlay,
+.vjs-ima-non-linear .vjs-control-bar {
+  z-index: 1112;
+}
+
 .ima-controls-div {
   bottom:0px;
   height: 37px;
