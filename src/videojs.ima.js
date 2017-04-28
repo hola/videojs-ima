@@ -53,6 +53,18 @@
     showControlsForJSAds: true
   };
 
+  var eventTypes = (videojs.browser.IS_ANDROID || videojs.browser.IS_IOS) ? {
+    click: 'touchend',
+    mousedown: 'touchstart',
+    mouseup: 'touchend',
+    mousemove: 'touchmove'
+  } : {
+    click: 'click',
+    mousedown: 'mousedown',
+    mouseup: 'mouseup',
+    mousemove: 'mousemove'
+  };
+
   var init = function(options, readyCallback) {
     this.ima = new ImaPlugin(this, options, readyCallback);
   };
@@ -163,20 +175,20 @@
       assignControlAttributes_(this.playPauseDiv, 'ima-play-pause-div');
       addClass_(this.playPauseDiv, 'ima-playing');
       this.playPauseDiv.addEventListener(
-          'click',
+          eventTypes.click,
           onAdPlayPauseClick_,
           false);
       this.muteDiv = document.createElement('div');
       assignControlAttributes_(this.muteDiv, 'ima-mute-div');
       addClass_(this.muteDiv, 'ima-non-muted');
       this.muteDiv.addEventListener(
-          'click',
+          eventTypes.click,
           onAdMuteClick_,
           false);
       this.sliderDiv = document.createElement('div');
       assignControlAttributes_(this.sliderDiv, 'ima-slider-div');
       this.sliderDiv.addEventListener(
-          'mousedown',
+          eventTypes.mousedown,
           onAdVolumeSliderMouseDown_,
           false);
       this.sliderLevelDiv = document.createElement('div');
@@ -185,7 +197,7 @@
       assignControlAttributes_(this.fullscreenDiv, 'ima-fullscreen-div');
       addClass_(this.fullscreenDiv, 'ima-non-fullscreen');
       this.fullscreenDiv.addEventListener(
-          'click',
+          eventTypes.click,
           onAdFullscreenClick_,
           false);
       this.adContainerDiv.appendChild(this.controlsDiv);
@@ -668,8 +680,8 @@
      * @private
      */
     var onAdVolumeSliderMouseDown_ = function() {
-       document.addEventListener('mouseup', onMouseUp_, false);
-       document.addEventListener('mousemove', onMouseMove_, false);
+       document.addEventListener(eventTypes.mouseup, onMouseUp_, false);
+       document.addEventListener(eventTypes.mousemove, onMouseMove_, false);
     };
 
     /* Mouse movement listener used for volume slider.
@@ -684,17 +696,18 @@
      */
     var onMouseUp_ = function(event) {
       setVolumeSlider_(event);
-      document.removeEventListener('mousemove', onMouseMove_);
-      document.removeEventListener('mouseup', onMouseUp_);
+      document.removeEventListener(eventTypes.mousemove, onMouseMove_);
+      document.removeEventListener(eventTypes.mouseup, onMouseUp_);
     };
 
     /* Utility function to set volume and associated UI
      * @private
      */
     var setVolumeSlider_ = function(event) {
-      var percent =
-          (event.clientX - this.sliderDiv.getBoundingClientRect().left) /
-              this.sliderDiv.offsetWidth;
+      var clientX = event.changedTouches ? event.changedTouches[0].clientX :
+        event.clientX;
+      var percent = (clientX - this.sliderDiv.getBoundingClientRect().left) /
+        this.sliderDiv.offsetWidth;
       percent *= 100;
       //Bounds value 0-100 if mouse is outside slider region.
       percent = Math.min(Math.max(percent, 0), 100);
