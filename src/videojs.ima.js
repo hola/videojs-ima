@@ -173,42 +173,60 @@
       assignControlAttributes_(this.progressDiv, 'ima-progress-div');
       this.playPauseDiv = document.createElement('div');
       assignControlAttributes_(this.playPauseDiv, 'ima-play-pause-div');
+      // XXX alexeym: find a way to reuse existing control-bar from the player
+      var playButton = this.player.controlBar.playToggle.el_;
+      this.playPauseDiv.innerHTML = playButton.innerHTML;
+      addClass_(this.playPauseDiv, playButton.className);
       addClass_(this.playPauseDiv, 'ima-playing');
+      var playButtonIcon = this.playPauseDiv.getElementsByTagName('svg')[0];
+      playButtonIcon.setAttribute('class', 'ima-play-icon');
+      this.playPauseDiv.innerHTML += playButtonIcon.outerHTML;
+      var pauseButtonIcon = this.playPauseDiv.getElementsByTagName('svg')[1];
+      pauseButtonIcon.setAttribute('class', 'ima-pause-icon');
+      var pauseIconPath = pauseButtonIcon.getElementsByTagName('path');
+      pauseIconPath[0].setAttribute('d', 'M 0,0 0,0 0,20 0,20 M 0,0 0,0 0,20 0,20 Z');
+      pauseIconPath[1].setAttribute('d', 'M 0,0 5,0 5,20 0,20 M 9,0 14,0 14,20 9,20 Z');
       this.playPauseDiv.addEventListener(
           eventTypes.click,
           onAdPlayPauseClick_,
           false);
       this.muteDiv = document.createElement('div');
       assignControlAttributes_(this.muteDiv, 'ima-mute-div');
+      var volumeButton = this.player.controlBar.volumeMenuButton.el_;
+      this.muteDiv.innerHTML = volumeButton.innerHTML;
+      addClass_(this.muteDiv, volumeButton.className);
       addClass_(this.muteDiv, 'ima-non-muted');
-      this.muteDiv.addEventListener(
+      var muteToggle = this.muteDiv.getElementsByClassName('vjs-button-icon')[0];
+      muteToggle.addEventListener(
           eventTypes.click,
           onAdMuteClick_,
           false);
-      this.sliderDiv = document.createElement('div');
-      assignControlAttributes_(this.sliderDiv, 'ima-slider-div');
+      this.sliderDiv = this.muteDiv.getElementsByClassName('vjs-volume-bar')[0]
       this.sliderDiv.addEventListener(
           eventTypes.mousedown,
           onAdVolumeSliderMouseDown_,
           false);
-      this.sliderLevelDiv = document.createElement('div');
-      assignControlAttributes_(this.sliderLevelDiv, 'ima-slider-level-div');
+      this.sliderLevelDiv = this.muteDiv.getElementsByClassName('vjs-volume-level')[0]
       this.fullscreenDiv = document.createElement('div');
       assignControlAttributes_(this.fullscreenDiv, 'ima-fullscreen-div');
+      var fullscreenToggle = this.player.controlBar.fullscreenToggle.el_;
+      this.fullscreenDiv.innerHTML = fullscreenToggle.innerHTML;
+      addClass_(this.fullscreenDiv, fullscreenToggle.className);
       addClass_(this.fullscreenDiv, 'ima-non-fullscreen');
       this.fullscreenDiv.addEventListener(
           eventTypes.click,
           onAdFullscreenClick_,
           false);
+      var spacer = document.createElement('div');
+      assignControlAttributes_(spacer, 'ima-controls-spacer');
       this.adContainerDiv.appendChild(this.controlsDiv);
       this.controlsDiv.appendChild(this.countdownDiv);
       this.controlsDiv.appendChild(this.seekBarDiv);
       this.controlsDiv.appendChild(this.playPauseDiv);
       this.controlsDiv.appendChild(this.muteDiv);
-      this.controlsDiv.appendChild(this.sliderDiv);
+      this.controlsDiv.appendChild(spacer);
       this.controlsDiv.appendChild(this.fullscreenDiv);
       this.seekBarDiv.appendChild(this.progressDiv);
-      this.sliderDiv.appendChild(this.sliderLevelDiv);
     }.bind(this);
 
     /**
@@ -319,6 +337,7 @@
               initHeight,
               google.ima.ViewMode.NORMAL);
           this.adsManager.setVolume(this.player.muted() ? 0 : this.player.volume());
+          updateVolumeIcon_();
         } catch (adError) {
           onAdError_(adError);
         }
@@ -371,6 +390,7 @@
               this.getPlayerHeight(),
               google.ima.ViewMode.NORMAL);
           this.adsManager.setVolume(this.player.muted() ? 0 : this.player.volume());
+          updateVolumeIcon_();
           this.adsManager.start();
         } catch (adError) {
           onAdError_(adError);
@@ -445,7 +465,7 @@
       if ((contentType === 'application/javascript') && !this.settings.showControlsForJSAds) {
         this.controlsDiv.style.display = 'none';
       } else {
-        this.controlsDiv.style.display = 'block';
+        this.controlsDiv.style.display = 'flex';
       }
 
       this.vjsControls.hide();
@@ -613,7 +633,7 @@
      * @private
      */
     var showAdControls_ = function() {
-      this.controlsDiv.style.height = '37px';
+      this.controlsDiv.style.height = '50px';
       this.playPauseDiv.style.display = 'block';
       this.muteDiv.style.display = 'block';
       this.sliderDiv.style.display = 'block';
@@ -674,6 +694,7 @@
         this.adMuted = true;
         this.sliderLevelDiv.style.width = "0%";
       }
+      updateVolumeIcon_();
     }.bind(this);
 
     /* Listener for mouse down events during ad playback. Used for volume.
@@ -699,6 +720,22 @@
       document.removeEventListener(eventTypes.mousemove, onMouseMove_);
       document.removeEventListener(eventTypes.mouseup, onMouseUp_);
     };
+
+    var updateVolumeIcon_ = function(){
+      var vol = this.player.volume();
+      var level = 3;
+      if (vol === 0 || this.player.muted()) {
+        level = 0;
+      } else if (vol < 0.33) {
+        level = 1;
+      } else if (vol < 0.67) {
+        level = 2;
+      }
+      for (var i = 0; i < 4; i++) {
+        removeClass_(this.muteDiv, 'vjs-vol-'+i);
+      }
+      addClass_(this.muteDiv, 'vjs-vol-'+level);
+    }.bind(this);
 
     /* Utility function to set volume and associated UI
      * @private
@@ -727,6 +764,7 @@
         this.player.muted(false);
         this.adMuted = false;
       }
+      updateVolumeIcon_();
     }.bind(this);
 
     /**
@@ -791,6 +829,7 @@
         removeClass_(this.muteDiv, 'ima-muted');
         this.sliderLevelDiv.style.width = newVolume * 100 + '%';
       }
+      updateVolumeIcon_();
     }.bind(this);
 
     /**
