@@ -174,27 +174,42 @@
       this.playPauseDiv = document.createElement('div');
       assignControlAttributes_(this.playPauseDiv, 'ima-play-pause-div');
       // XXX alexeym: find a way to reuse existing control-bar from the player
-      var playButton = this.player.controlBar.playToggle.el_;
-      this.playPauseDiv.innerHTML = playButton.innerHTML;
-      addClass_(this.playPauseDiv, playButton.className);
+      var play1 = 'M 0,0 0,20 14,10 Z';
+      var play2 = 'M 0,0 0,0 0,20 0,20 M 0,0 0,0 0,20 0,20 Z';
+      var pause1 = 'M 0,0 0,0 0,20 0,20 M 0,0 0,0 0,20 0,20 Z';
+      var pause2 = 'M 0,0 5,0 5,20 0,20 M 9,0 14,0 14,20 9,20 Z';
+      var playPauseIcon = '<svg class="%class%" height="3em" width="3em" viewBox="-13 -10 40 40" class="ima-play-icon">'
+      +'<g><g><path d="%d1%"></path><path d="%d2%"></path></g></g></svg>';
+      var playIcon = playPauseIcon.replace('%class%', 'ima-play-icon')
+      .replace('%d1%', play1).replace('%d2%', play2);
+      var pauseIcon = playPauseIcon.replace('%class%', 'ima-pause-icon')
+      .replace('%d1%', pause1).replace('%d2%', pause2);
+      var playButtonInnerHTML = '<span class="vjs-control-text">Play</span>'
+      +'<div class="vjs-tooltip">Play</div>'+playIcon+pauseIcon;
+      this.playPauseDiv.innerHTML = playButtonInnerHTML;
+      addClass_(this.playPauseDiv, 'vjs-play-control vjs-control vjs-button');
       addClass_(this.playPauseDiv, 'ima-playing');
-      var playButtonIcon = this.playPauseDiv.getElementsByTagName('svg')[0];
-      playButtonIcon.setAttribute('class', 'ima-play-icon');
-      this.playPauseDiv.innerHTML += playButtonIcon.outerHTML;
-      var pauseButtonIcon = this.playPauseDiv.getElementsByTagName('svg')[1];
-      pauseButtonIcon.setAttribute('class', 'ima-pause-icon');
-      var pauseIconPath = pauseButtonIcon.getElementsByTagName('path');
-      pauseIconPath[0].setAttribute('d', 'M 0,0 0,0 0,20 0,20 M 0,0 0,0 0,20 0,20 Z');
-      pauseIconPath[1].setAttribute('d', 'M 0,0 5,0 5,20 0,20 M 9,0 14,0 14,20 9,20 Z');
       this.playPauseDiv.addEventListener(
           eventTypes.click,
           onAdPlayPauseClick_,
           false);
       this.muteDiv = document.createElement('div');
       assignControlAttributes_(this.muteDiv, 'ima-mute-div');
-      var volumeButton = this.player.controlBar.volumeMenuButton.el_;
-      this.muteDiv.innerHTML = volumeButton.innerHTML;
-      addClass_(this.muteDiv, volumeButton.className);
+      var volumeButtonInnerHTML = '<div class="vjs-menu"><div class="vjs-menu-content">'
+      +'<div class="vjs-volume-bar vjs-slider-bar vjs-slider vjs-slider-horizontal">'
+      +'<div class="vjs-volume-level"><span class="vjs-control-text"></span></div>'
+      +'<div class="vjs-slider-gap-left"></div><div class="vjs-slider-gap-right"></div>'
+      +'</div></div></div><div class="vjs-button-icon">'
+      +'<svg height="2.8em" width="2.8em" viewBox="-5 -7 30 30">'
+      +'<polygon points="4,5 4,5 0,5 0,11 4,11 4,11 8,16 8,0"></polygon>'
+      +'<polygon class="volume-level-0" points="11.5,4 10,5.5 12.5,8 10,10.5 11.5,12 14,9.5 16.5,12 18,10.5 15.5,8 18,5.5 16.5,4 14,6.5"></polygon>'
+      +'<g><path class="volume-level-1" d="M10,4.6v6.9c1.2-0.7,2-2,2-3.4S11.2,5.2,10,4.6z"></path>'
+      +'<path class="volume-level-2" d="M16,8c0-2.2-0.9-4.2-2.3-5.6L12,3.6c1.2,1.1,2,2.7,2,4.4c0,1.8-0.8,3.3-2,4.4l1.7,1.2C15.1,12.2,16,10.2,16,8z"></path>'
+      +'<path class="volume-level-3" d="M16.9,0l-1.6,1.2C17,3,18,5.4,18,8c0,2.6-1,5-2.7,6.8l1.6,1.2c1.9-2.1,3.1-4.9,3.1-8C20,4.9,18.8,2.1,16.9,0z"></path>'
+      +'</g></svg></div><span class="vjs-control-text">Mute</span>'
+      +'<div class="vjs-tooltip">Mute</div>';
+      this.muteDiv.innerHTML = volumeButtonInnerHTML;
+      addClass_(this.muteDiv, 'vjs-volume-menu-button vjs-menu-button vjs-menu-button-inline vjs-control vjs-button vjs-volume-menu-button-horizontal');
       addClass_(this.muteDiv, 'ima-non-muted');
       var muteToggle = this.muteDiv.getElementsByClassName('vjs-button-icon')[0];
       muteToggle.addEventListener(
@@ -209,9 +224,11 @@
       this.sliderLevelDiv = this.muteDiv.getElementsByClassName('vjs-volume-level')[0]
       this.fullscreenDiv = document.createElement('div');
       assignControlAttributes_(this.fullscreenDiv, 'ima-fullscreen-div');
-      var fullscreenToggle = this.player.controlBar.fullscreenToggle.el_;
-      this.fullscreenDiv.innerHTML = fullscreenToggle.innerHTML;
-      addClass_(this.fullscreenDiv, fullscreenToggle.className);
+      var fullscreenToggleInnerHTML = '<div class="vjs-button-icon"></div>'
+      +'<span class="vjs-control-text">Full screen</span>'
+      +'<div class="vjs-tooltip">Full screen</div></div>';
+      this.fullscreenDiv.innerHTML = fullscreenToggleInnerHTML;
+      addClass_(this.fullscreenDiv, 'vjs-fullscreen-control vjs-control vjs-button');
       addClass_(this.fullscreenDiv, 'ima-non-fullscreen');
       this.fullscreenDiv.addEventListener(
           eventTypes.click,
