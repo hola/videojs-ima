@@ -557,6 +557,7 @@
         // Bump container when controls are shown
         addClass_(this.adContainerDiv, 'bumpable-ima-ad-container');
         this.player.addClass('vjs-ima-non-linear');
+        this.adContainerDiv.style.display = 'block';
       }
     }.bind(this);
 
