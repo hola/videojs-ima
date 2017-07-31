@@ -471,8 +471,6 @@
      * @private
      */
     this.onContentPauseRequested_ = function(adEvent) {
-      this.adsActive = true;
-      this.adPlaying = true;
       this.contentSource = this.player.currentSrc();
       this.player.off('contentended', this.localContentEndedListener);
       this.player.ads.startLinearAdMode();
@@ -488,6 +486,8 @@
       this.vjsControls.hide();
       showPlayButton();
       this.player.pause();
+      this.adsActive = true;
+      this.adPlaying = true;
     }.bind(this);
 
     /**
