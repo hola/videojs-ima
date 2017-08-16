@@ -176,3 +176,35 @@
 .ima-non-fullscreen:hover:before, .ima-fullscreen:hover:before {
   text-shadow: 0 0 1em #fff;
 }
+
+.video-js .vjs-control-bar {
+  z-index: 1112;
+}
+
+.video-js.vjs-ad-playing .vjs-control-bar>:not(.vjs-play-control):not(.vjs-volume-menu-button):not(.vjs-time-control):not(.vjs-progress-control):not(.vjs-spacer):not(.vjs-fullscreen-control):not(.vjs-gradient):not(.ima-countdown-div),
+.video-js.vjs-ad-playing .vjs-control-bar .vjs-mouse-display-tooltip,
+.video-js.vjs-ad-playing .vjs-control-bar .vjs-progress-control:before,
+.video-js.vjs-ad-playing .vjs-control-bar .vjs-play-progress:before,
+.video-js.vjs-ad-playing .vjs-control-bar .vjs-progress-control .vjs-load-progress,
+.video-js.vjs-ad-playing .vjs-control-bar .vjs-progress-control .vjs-mouse-display {
+  display: none;
+}
+
+.video-js.vjs-ad-playing .vjs-control-bar .vjs-progress-control .vjs-progress-holder {
+  cursor: auto;
+  box-shadow: none;
+  font-size: 100%;
+  margin: 0 1em;
+}
+
+.video-js .vjs-control-bar .ima-countdown-div {
+  display: none;
+}
+
+.video-js.vjs-ad-playing .vjs-control-bar .ima-countdown-div {
+  display: block;
+  position: absolute;
+  bottom: 130%;
+  left: 2em;
+  font-size: 12px;
+}

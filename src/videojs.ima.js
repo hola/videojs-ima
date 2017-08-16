@@ -165,7 +165,7 @@
       this.countdownDiv = document.createElement('div');
       assignControlAttributes_(this.countdownDiv, 'ima-countdown-div');
       this.countdownDiv.innerHTML = this.settings.adLabel;
-      this.countdownDiv.style.display = this.showCountdown ? 'block' : 'none';
+      this.countdownDiv.style.display = this.showCountdown ? '' : 'none';
       this.seekBarDiv = document.createElement('div');
       assignControlAttributes_(this.seekBarDiv, 'ima-seek-bar-div');
       this.seekBarDiv.style.width = '100%';
@@ -201,7 +201,6 @@
           onAdFullscreenClick_,
           false);
       this.adContainerDiv.appendChild(this.controlsDiv);
-      this.controlsDiv.appendChild(this.countdownDiv);
       this.controlsDiv.appendChild(this.seekBarDiv);
       this.controlsDiv.appendChild(this.playPauseDiv);
       this.controlsDiv.appendChild(this.muteDiv);
@@ -209,6 +208,13 @@
       this.controlsDiv.appendChild(this.fullscreenDiv);
       this.seekBarDiv.appendChild(this.progressDiv);
       this.sliderDiv.appendChild(this.sliderLevelDiv);
+      if (this.settings.vjsControls) {
+        this.initVjsControls();
+        this.controlsDiv.style.display = 'none';
+        this.vjsControls.el().appendChild(this.countdownDiv);
+      } else {
+        this.controlsDiv.appendChild(this.countdownDiv);
+      }
     }.bind(this);
 
     /**
@@ -440,17 +446,19 @@
       this.adContainerDiv.style.display = 'block';
 
       var contentType = adEvent.getAd().getContentType();
-      if ((contentType === 'application/javascript') && !this.settings.showControlsForJSAds) {
-        this.controlsDiv.style.display = 'none';
-      } else {
-        this.controlsDiv.style.display = 'block';
+      if (!this.settings.vjsControls){
+        if ((contentType === 'application/javascript') && !this.settings.showControlsForJSAds) {
+          this.controlsDiv.style.display = 'none';
+        } else {
+          this.controlsDiv.style.display = 'block';
+        }
+        this.vjsControls.hide();
       }
-
-      this.vjsControls.hide();
       showPlayButton();
       this.player.pause();
       this.adsActive = true;
       this.adPlaying = true;
+      this.vjsControls.playToggle.update();
     }.bind(this);
 
     /**
@@ -470,6 +478,7 @@
       this.vjsControls.show();
       this.player.ads.endLinearAdMode();
       this.countdownDiv.innerHTML = '';
+      this.vjsControls.playToggle.update();
     }.bind(this);
 
     /**
@@ -546,6 +555,15 @@
       }
     }.bind(this);
 
+    var formatTime = function(time) {
+      var m = Math.floor(time / 60);
+      var s = Math.floor(time % 60);
+      if (s.toString().length < 2) {
+        s = '0' + s;
+      }
+      return m + ':' + s;
+    };
+
     /**
      * Gets the current time and duration of the ad and calls the method to
      * update the ad UI.
@@ -566,23 +584,22 @@
       }
 
       // Update countdown timer data
-      var remainingMinutes = Math.floor(remainingTime / 60);
-      var remainingSeconds = Math.floor(remainingTime % 60);
-      if (remainingSeconds.toString().length < 2) {
-        remainingSeconds = '0' + remainingSeconds;
-      }
       var podCount = ': ';
       if (isPod && (totalAds > 1)) {
         podCount = ' (' + adPosition + ' of ' + totalAds + '): ';
       }
       this.countdownDiv.innerHTML =
-          this.settings.adLabel + podCount +
-          remainingMinutes + ':' + remainingSeconds;
+          this.settings.adLabel + podCount + formatTime(remainingTime);
 
       // Update UI
       var playProgressRatio = currentTime / duration;
       var playProgressPercent = playProgressRatio * 100;
       this.progressDiv.style.width = playProgressPercent + '%';
+      if (this.settings.vjsControls) {
+        this.vjsControls.progressControl.seekBar.update();
+        this.vjsControls.durationDisplay.updateContent();
+        this.vjsControls.currentTimeDisplay.updateContent();
+      }
     }.bind(this);
 
     this.getPlayerWidth = function() {
@@ -832,6 +849,7 @@
       }
       this.vjsControls.show();
       this.player.ads.endLinearAdMode();
+      this.vjsControls.playToggle.update();
       if (this.adTrackingTimer) {
         // If this is called while an ad is playing, stop trying to get that
         // ad's current time.
@@ -1097,7 +1115,7 @@
      */
     this.setShowCountdown = function(showCountdownIn) {
       this.showCountdown = showCountdownIn;
-      this.countdownDiv.style.display = this.showCountdown ? 'block' : 'none';
+      this.countdownDiv.style.display = this.showCountdown ? '' : 'none';
     }.bind(this);
 
     /**
@@ -1403,6 +1421,87 @@
         this.adsManager.destroy();
         this.adsManager = null;
       }
+    }.bind(this);
+
+    this.initVjsControls = function() {
+      var _this = this;
+      var override = function(cls, method, fn, always) {
+        var orig = cls.prototype[method];
+        return cls.prototype[method] = function() {
+          return _this.adsActive || always ? fn && fn.apply(this, arguments) :
+            orig && orig.apply(this, arguments);
+        };
+      };
+      var overrideHandler = function(cls, obj, target, event, method, fn, always) {
+        var orig = cls.prototype[method];
+        var handler = override(cls, method, fn);
+        if (target) {
+          obj.off(target, event, orig);
+          obj.on(target, event, handler);
+        } else {
+          obj.off(event, orig);
+          obj.on(event, handler);
+        }
+      };
+      var PlayToggle = videojs.getComponent('PlayToggle');
+      var playToggle = this.vjsControls.playToggle;
+      overrideHandler(PlayToggle, playToggle, null, ['tap', 'click'],
+        'handleClick', function() {
+        onAdPlayPauseClick_();
+        if (_this.adPlaying) {
+          this.handlePlay();
+        } else {
+          this.handlePause();
+        }
+      });
+      override(PlayToggle, 'update', function() {
+        var paused = _this.adsActive ? !_this.adPlaying : player.paused();
+        this.toggleClass('vjs-play-control-ad', _this.adsActive );
+        this.toggleClass('vjs-paused', paused);
+        this.toggleClass('vjs-playing', !paused);
+        this.controlText(paused ? 'Play' : 'Pause');
+      });
+      overrideHandler(PlayToggle, playToggle, player, 'play',
+        'handlePlay', function() { this.update(); }, true);
+      overrideHandler(PlayToggle, playToggle, player, 'pause',
+        'handlePause', function() { this.update(); }, true);
+
+      var SeekBar = videojs.getComponent('SeekBar');
+      var seekBar = this.vjsControls.progressControl.seekBar;
+      override(SeekBar, 'getPercent', function() {
+        var remainingTime = _this.adsManager.getRemainingTime();
+        var duration = _this.currentAd.getDuration();
+        var currentTime = Math.max(duration - remainingTime, 0);
+        return currentTime / duration;
+      });
+      overrideHandler(SeekBar, seekBar, null, ['mousedown', 'touchstart'],
+        'handleMouseDown', null);
+      overrideHandler(SeekBar, seekBar, null, 'focus', 'handleFocus', null);
+
+      var DurationDisplay = videojs.getComponent('DurationDisplay');
+      var durationDisplay = this.vjsControls.durationDisplay;
+      overrideHandler(DurationDisplay, durationDisplay, player,
+        ['timeupdate', 'loadedmetadata'], 'updateContent', function() {
+        var duration = _this.currentAd.getDuration();
+        if (duration && duration != this.duration_) {
+          this.duration_  = duration;
+          this.contentEl_.innerHTML = '<span class="vjs-control-text">'+
+            this.localize('Duration Time')+'</span> '+formatTime(duration);
+        }
+      });
+
+      var CurrentTimeDisplay = videojs.getComponent('CurrentTimeDisplay');
+      var currentTimeDisplay = this.vjsControls.currentTimeDisplay;
+      overrideHandler(CurrentTimeDisplay, currentTimeDisplay, player,
+        ['timeupdate', 'loadedmetadata'], 'updateContent', function() {
+        var time = _this.currentAd.getDuration() - _this.adsManager.getRemainingTime();
+        var formattedTime = formatTime(time);
+        if (formattedTime !== this.formattedTime_) {
+          this.formattedTime_ = formattedTime;
+          this.contentEl_.innerHTML = '<span class="vjs-control-text">'+
+            this.localize('Current Time')+'</span> '+formattedTime;
+        }
+      });
     }.bind(this);
 
     this.settings = extend({}, ima_defaults, options || {});
