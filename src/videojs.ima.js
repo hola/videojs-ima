@@ -224,21 +224,9 @@
       this.sliderLevelDiv = this.muteDiv.getElementsByClassName('vjs-volume-level')[0]
       this.fullscreenDiv = document.createElement('div');
       assignControlAttributes_(this.fullscreenDiv, 'ima-fullscreen-div');
-      // XXX andrey: find a way to reuse controls from hola-skin
-      var fullscreenToggleInnerHTML = '<div class="vjs-button-icon vjs-exit-fullscreen-icon">'
-      +'<svg height="100%" width="100%" viewBox="3 3 30 30">'
-      +'<g><path d="m 20,26 2,0 0,-4 4,0 0,-2 -6,0 0,6 0,0 z"></path></g>'
-      +'<g><path d="m 10,22 4,0 0,4 2,0 0,-6 -6,0 0,2 0,0 z"></path></g>'
-      +'<g><path d="m 14,14 -4,0 0,2 6,0 0,-6 -2,0 0,4 0,0 z"></path></g>'
-      +'<g><path d="m 22,14 0,-4 -2,0 0,6 6,0 0,-2 -4,0 0,0 z"></path></g>'
-      +'</svg></div><div class="vjs-button-icon vjs-fullscreen-icon">'
-      +'<svg height="100%" width="100%" viewBox="3 3 30 30">'
-      +'<g><path d="m 10,16 2,0 0,-4 4,0 0,-2 L 10,10 l 0,6 0,0 z"></path></g>'
-      +'<g><path d="m 20,10 0,2 4,0 0,4 2,0 L 26,10 l -6,0 0,0 z"></path></g>'
-      +'<g><path d="m 24,24 -4,0 0,2 L 26,26 l 0,-6 -2,0 0,4 0,0 z"></path></g>'
-      +'<g><path d="M 12,20 10,20 10,26 l 6,0 0,-2 -4,0 0,-4 0,0 z"></path></g>'
-      +'</svg></div><span class="vjs-control-text">Full screen</span>'
-      +'<div class="vjs-tooltip">Full screen</div>';
+      var fullscreenToggleInnerHTML = '<div class="vjs-button-icon"></div>'
+      +'<span class="vjs-control-text">Full screen</span>'
+      +'<div class="vjs-tooltip">Full screen</div></div>';
       this.fullscreenDiv.innerHTML = fullscreenToggleInnerHTML;
       addClass_(this.fullscreenDiv, 'vjs-fullscreen-control vjs-control vjs-button');
       addClass_(this.fullscreenDiv, 'ima-non-fullscreen');
