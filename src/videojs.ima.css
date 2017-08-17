@@ -190,6 +190,11 @@
   display: none;
 }
 
+.video-js.vjs-ad-playing .vjs-control-bar .vjs-progress-control .vjs-thumbnail-holder,
+.video-js.vjs-ad-playing .vjs-control-bar .vjs-progress-control .vjs-thumbnail {
+  display: none !important;
+}
+
 .video-js.vjs-ad-playing .vjs-control-bar .vjs-progress-control .vjs-progress-holder {
   cursor: auto;
   box-shadow: none;
