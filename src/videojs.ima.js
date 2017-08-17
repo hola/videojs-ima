@@ -412,6 +412,7 @@
       this.vjsControls.show();
       this.adsManager.destroy();
       this.adContainerDiv.style.display = 'none';
+      this.updateVjsControls();
       this.player.trigger({ type: 'adserror', data: { AdError: errorMessage, AdErrorEvent: adErrorEvent }});
     }.bind(this);
 
@@ -458,7 +459,7 @@
       this.player.pause();
       this.adsActive = true;
       this.adPlaying = true;
-      this.vjsControls.playToggle.update();
+      this.updateVjsControls();
     }.bind(this);
 
     /**
@@ -478,7 +479,7 @@
       this.vjsControls.show();
       this.player.ads.endLinearAdMode();
       this.countdownDiv.innerHTML = '';
-      this.vjsControls.playToggle.update();
+      this.updateVjsControls();
     }.bind(this);
 
     /**
@@ -595,11 +596,7 @@
       var playProgressRatio = currentTime / duration;
       var playProgressPercent = playProgressRatio * 100;
       this.progressDiv.style.width = playProgressPercent + '%';
-      if (this.settings.vjsControls) {
-        this.vjsControls.progressControl.seekBar.update();
-        this.vjsControls.durationDisplay.updateContent();
-        this.vjsControls.currentTimeDisplay.updateContent();
-      }
+      this.updateVjsControls();
     }.bind(this);
 
     this.getPlayerWidth = function() {
@@ -849,7 +846,7 @@
       }
       this.vjsControls.show();
       this.player.ads.endLinearAdMode();
-      this.vjsControls.playToggle.update();
+      this.updateVjsControls();
       if (this.adTrackingTimer) {
         // If this is called while an ad is playing, stop trying to get that
         // ad's current time.
@@ -1456,24 +1453,32 @@
       });
       override(PlayToggle, 'update', function() {
         var paused = _this.adsActive ? !_this.adPlaying : player.paused();
-        this.toggleClass('vjs-play-control-ad', _this.adsActive );
+        this.toggleClass('vjs-play-control-ad', _this.adsActive);
         this.toggleClass('vjs-paused', paused);
         this.toggleClass('vjs-playing', !paused);
         this.controlText(paused ? 'Play' : 'Pause');
-      });
+      }, true);
       overrideHandler(PlayToggle, playToggle, player, 'play',
         'handlePlay', function() { this.update(); }, true);
       overrideHandler(PlayToggle, playToggle, player, 'pause',
         'handlePause', function() { this.update(); }, true);
 
       var SeekBar = videojs.getComponent('SeekBar');
+      var DvrSeekBar = videojs.getComponent('DvrSeekBar');
       var seekBar = this.vjsControls.progressControl.seekBar;
-      override(SeekBar, 'getPercent', function() {
+      var getPercent = function() {
+        var duration = _this.currentAd && _this.currentAd.getDuration();
+        if (!duration) {
+          return 0;
+        }
         var remainingTime = _this.adsManager.getRemainingTime();
-        var duration = _this.currentAd.getDuration();
         var currentTime = Math.max(duration - remainingTime, 0);
         return currentTime / duration;
-      });
+      };
+      override(SeekBar, 'getPercent', getPercent);
+      if (DvrSeekBar) {
+        override(DvrSeekBar, 'getPercent', getPercent);
+      }
       overrideHandler(SeekBar, seekBar, null, ['mousedown', 'touchstart'],
         'handleMouseDown', null);
       overrideHandler(SeekBar, seekBar, null, 'focus', 'handleFocus', null);
@@ -1482,7 +1487,7 @@
       var durationDisplay = this.vjsControls.durationDisplay;
       overrideHandler(DurationDisplay, durationDisplay, player,
         ['timeupdate', 'loadedmetadata'], 'updateContent', function() {
-        var duration = _this.currentAd.getDuration();
+        var duration = _this.currentAd && _this.currentAd.getDuration();
         if (duration && duration != this.duration_) {
           this.duration_  = duration;
           this.contentEl_.innerHTML = '<span class="vjs-control-text">'+
@@ -1494,7 +1499,11 @@
       var currentTimeDisplay = this.vjsControls.currentTimeDisplay;
       overrideHandler(CurrentTimeDisplay, currentTimeDisplay, player,
         ['timeupdate', 'loadedmetadata'], 'updateContent', function() {
-        var time = _this.currentAd.getDuration() - _this.adsManager.getRemainingTime();
+        var duration = _this.currentAd && _this.currentAd.getDuration();
+        if (!duration) {
+          return;
+        }
+        var time = duration - _this.adsManager.getRemainingTime();
         var formattedTime = formatTime(time);
         if (formattedTime !== this.formattedTime_) {
           this.formattedTime_ = formattedTime;
@@ -1502,6 +1511,16 @@
             this.localize('Current Time')+'</span> '+formattedTime;
         }
       });
+    }.bind(this);
+
+    this.updateVjsControls = function() {
+      if (!this.settings.vjsControls) {
+        return;
+      }
+      this.vjsControls.playToggle.update();
+      this.vjsControls.progressControl.seekBar.update();
+      this.vjsControls.durationDisplay.updateContent();
+      this.vjsControls.currentTimeDisplay.updateContent();
     }.bind(this);
 
     this.settings = extend({}, ima_defaults, options || {});
