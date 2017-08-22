@@ -204,6 +204,7 @@
 
 .video-js .vjs-control-bar .ima-countdown-div {
   display: none;
+  z-index: 1;
 }
 
 .video-js.vjs-ad-playing .vjs-control-bar .ima-countdown-div {
