@@ -509,6 +509,7 @@
      */
    var onAdLoaded_ = function(adEvent) {
       if (!adEvent.getAd().isLinear()) {
+        this.player.ads.endLinearAdMode();
         this.player.play();
       }
     }.bind(this);
