@@ -50,6 +50,7 @@
     timeout: 5000,
     prerollTimeout: 100,
     adLabel: 'Advertisement',
+    showControlsForAds: true,
     showControlsForJSAds: true
   };
 
@@ -447,8 +448,9 @@
       this.adContainerDiv.style.display = 'block';
 
       var contentType = adEvent.getAd().getContentType();
-      if (!this.settings.vjsControls){
-        if ((contentType === 'application/javascript') && !this.settings.showControlsForJSAds) {
+      if (!this.settings.vjsControls || !this.settings.showControlsForAds){
+        if (!this.settings.showControlsForAds
+            || ((contentType === 'application/javascript') && !this.settings.showControlsForJSAds)) {
           this.controlsDiv.style.display = 'none';
         } else {
           this.controlsDiv.style.display = 'block';
