@@ -1527,6 +1527,7 @@
     }.bind(this);
 
     this.settings = extend({}, ima_defaults, options || {});
+    this.settings.adLabel = this.player.localize(this.settings.adLabel);
 
     // Currently this isn't used but I can see it being needed in the future, so
     // to avoid implementation problems with later updates I'm requiring it.
