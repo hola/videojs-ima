@@ -1425,16 +1425,16 @@
 
     this.initVjsControls = function() {
       var _this = this;
-      var override = function(cls, method, fn, always) {
+      var override = function(cls, obj, method, fn, always) {
         var orig = cls.prototype[method];
-        return cls.prototype[method] = function() {
+        return obj[method] = function() {
           return _this.adsActive || always ? fn && fn.apply(this, arguments) :
             orig && orig.apply(this, arguments);
         };
       };
       var overrideHandler = function(cls, obj, target, event, method, fn, always) {
         var orig = cls.prototype[method];
-        var handler = override(cls, method, fn);
+        var handler = override(cls, obj, method, fn);
         if (target) {
           obj.off(target, event, orig);
           obj.on(target, event, handler);
@@ -1454,12 +1454,14 @@
           this.handlePause();
         }
       });
-      override(PlayToggle, 'update', function() {
+      override(PlayToggle, playToggle, 'update', function() {
         var paused = _this.adsActive ? !_this.adPlaying : player.paused();
         this.toggleClass('vjs-play-control-ad', _this.adsActive);
         this.toggleClass('vjs-paused', paused);
         this.toggleClass('vjs-playing', !paused);
-        this.controlText(paused ? 'Play' : 'Pause');
+        var text  = paused ? 'Play' : 'Pause';
+        if (text != this.controlText())
+          this.controlText(text);
       }, true);
       overrideHandler(PlayToggle, playToggle, player, 'play',
         'handlePlay', function() { this.update(); }, true);
@@ -1478,9 +1480,9 @@
         var currentTime = Math.max(duration - remainingTime, 0);
         return currentTime / duration;
       };
-      override(SeekBar, 'getPercent', getPercent);
+      override(SeekBar, seekBar, 'getPercent', getPercent);
       if (DvrSeekBar) {
-        override(DvrSeekBar, 'getPercent', getPercent);
+        override(DvrSeekBar, seekBar, 'getPercent', getPercent);
       }
       overrideHandler(SeekBar, seekBar, null, ['mousedown', 'touchstart'],
         'handleMouseDown', null);
