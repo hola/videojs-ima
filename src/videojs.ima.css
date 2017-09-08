@@ -191,6 +191,36 @@
   display: none;
 }
 
+.video-js.vjs-ad-playing .vjs-control-bar {
+  transition: height 0.1s ease;
+}
+
+.video-js.vjs-ad-playing.vjs-user-inactive:not(.vjs-ad-paused) .vjs-control-bar {
+  height: 0;
+}
+
+.video-js.vjs-ad-playing.vjs-user-inactive:not(.vjs-ad-paused) .vjs-control-bar .vjs-progress-holder {
+  margin: 0;
+}
+
+.video-js.vjs-ad-playing .vjs-control-bar>:not(.vjs-progress-control):not(.ima-countdown-div) {
+  transition: opacity 0.1s ease, visibility 0.1s ease;
+}
+
+.video-js.vjs-ad-playing .vjs-control-bar>:not(.vjs-progress-control):not(.ima-countdown-div) div{
+  transition: line-height 0.1s ease;
+}
+
+.video-js.vjs-ad-playing.vjs-user-inactive:not(.vjs-ad-paused) .vjs-control-bar>:not(.vjs-progress-control):not(.ima-countdown-div) {
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+}
+
+.video-js.vjs-ad-playing.vjs-user-inactive:not(.vjs-ad-paused) .vjs-control-bar>:not(.vjs-progress-control):not(.ima-countdown-div) div{
+  line-height: 0.01em;
+}
+
 .video-js.vjs-ad-playing .vjs-control-bar .vjs-progress-control .vjs-thumbnail-holder,
 .video-js.vjs-ad-playing .vjs-control-bar .vjs-progress-control .vjs-thumbnail {
   display: none !important;
@@ -211,7 +241,7 @@
 .video-js.vjs-ad-playing .vjs-control-bar .ima-countdown-div {
   display: block;
   position: absolute;
-  bottom: 130%;
+  margin-top: -2em;
   left: 2em;
-  font-size: 12px;
+  font-size: 1.2em;
 }

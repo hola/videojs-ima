@@ -1522,6 +1522,8 @@
       if (!this.settings.vjsControls) {
         return;
       }
+      this.player.toggleClass('vjs-ad-paused',
+        this.adsActive && !this.adPlaying);
       this.vjsControls.playToggle.update();
       this.vjsControls.progressControl.seekBar.update();
       this.vjsControls.durationDisplay.updateContent();
