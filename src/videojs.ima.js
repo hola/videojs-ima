@@ -495,7 +495,7 @@
       this.adContainerDiv.style.display = 'none';
       if (this.contentComplete == true) {
         if (this.contentPlayer.src && !/^blob:/.test(this.contentPlayer.src) &&
-          this.contentPlayer.src != this.contentSource) {
+          this.contentSource && this.contentPlayer.src != this.contentSource) {
           this.player.src(this.contentSource);
         }
         for (var index in this.contentAndAdsEndedListeners) {
@@ -510,7 +510,7 @@
      * @private
      */
    var onAdLoaded_ = function(adEvent) {
-      if (!adEvent.getAd().isLinear()) {
+      if (!adEvent.getAd().isLinear() && !this.player.ended()) {
         this.player.ads.endLinearAdMode();
         this.player.play();
       }
