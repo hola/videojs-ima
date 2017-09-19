@@ -1473,7 +1473,7 @@
       var seekBar = this.vjsControls.progressControl.seekBar;
       var getPercent = function() {
         var duration = _this.currentAd && _this.currentAd.getDuration();
-        if (!duration) {
+        if (!duration || duration<0) {
           return 0;
         }
         var remainingTime = _this.adsManager.getRemainingTime();
@@ -1524,10 +1524,16 @@
       }
       this.player.toggleClass('vjs-ad-paused',
         this.adsActive && !this.adPlaying);
-      this.vjsControls.playToggle.update();
-      this.vjsControls.progressControl.seekBar.update();
-      this.vjsControls.durationDisplay.updateContent();
-      this.vjsControls.currentTimeDisplay.updateContent();
+      var controls = this.vjsControls;
+      controls.playToggle.update();
+      controls.progressControl.seekBar.update();
+      controls.durationDisplay.updateContent();
+      controls.currentTimeDisplay.updateContent();
+      var duration = this.currentAd && this.currentAd.getDuration();
+      var display = !this.adsActive || duration && duration>=0 ? '' : 'none';
+      controls.durationDisplay.el().style.display = display;
+      controls.currentTimeDisplay.el().style.display = display;
+      controls.timeDivider.el().style.display = display;
     }.bind(this);
 
     this.settings = extend({}, ima_defaults, options || {});
