@@ -153,6 +153,7 @@
       createControls_();
       this.adDisplayContainer =
           new google.ima.AdDisplayContainer(this.adContainerDiv, this.contentPlayer);
+      this.showAdContainer(true);
     }.bind(this);
 
     /**
@@ -216,6 +217,11 @@
       } else {
         this.controlsDiv.appendChild(this.countdownDiv);
       }
+    }.bind(this);
+
+    this.showAdContainer = function(show) {
+      this.adContainerDiv.style.display = show ? 'block' : 'none';
+      this.player.toggleClass('vjs-ima-ad', show);
     }.bind(this);
 
     /**
@@ -394,7 +400,7 @@
      */
     var onAdsLoaderError_ = function(event) {
       window.console.log('AdsLoader error: ' + event.getError());
-      this.adContainerDiv.style.display = 'none';
+      this.showAdContainer(false);
       if (this.adsManager) {
         this.adsManager.destroy();
       }
@@ -412,7 +418,7 @@
       window.console.log('Ad error: ' + errorMessage);
       this.vjsControls.show();
       this.adsManager.destroy();
-      this.adContainerDiv.style.display = 'none';
+      this.showAdContainer(false);
       this.updateVjsControls();
       this.player.trigger({ type: 'adserror', data: { AdError: errorMessage, AdErrorEvent: adErrorEvent }});
     }.bind(this);
@@ -445,7 +451,7 @@
       this.contentSource = this.player.currentSrc();
       this.player.off('contentended', this.localContentEndedListener);
       this.player.ads.startLinearAdMode();
-      this.adContainerDiv.style.display = 'block';
+      this.showAdContainer(true);
 
       var contentType = adEvent.getAd().getContentType();
       if (!this.settings.vjsControls || !this.settings.showControlsForAds){
@@ -476,7 +482,7 @@
       this.player.on('contentended', this.localContentEndedListener);
       if (this.currentAd == null || // hide for post-roll only playlist
           this.currentAd.isLinear()) { // don't hide for non-linear ads
-        this.adContainerDiv.style.display = 'none';
+        this.showAdContainer(false);
       }
       this.vjsControls.show();
       this.player.ads.endLinearAdMode();
@@ -492,7 +498,7 @@
      */
     var onAllAdsCompleted_ = function(adEvent) {
       this.allAdsCompleted = true;
-      this.adContainerDiv.style.display = 'none';
+      this.showAdContainer(false);
       if (this.contentComplete == true) {
         if (this.contentPlayer.src && !/^blob:/.test(this.contentPlayer.src) &&
           this.contentSource && this.contentPlayer.src != this.contentSource) {
@@ -533,7 +539,7 @@
         // Bump container when controls are shown
         addClass_(this.adContainerDiv, 'bumpable-ima-ad-container');
         this.player.addClass('vjs-ima-non-linear');
-        this.adContainerDiv.style.display = 'block';
+        this.showAdContainer(true);
       }
     }.bind(this);
 
@@ -845,7 +851,7 @@
       this.adPlaying = false;
       this.player.on('contentended', this.localContentEndedListener);
       if (this.currentAd && this.currentAd.isLinear()) {
-        this.adContainerDiv.style.display = 'none';
+        this.showAdContainer(false);
       }
       this.vjsControls.show();
       this.player.ads.endLinearAdMode();
