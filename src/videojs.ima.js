@@ -1542,6 +1542,32 @@
       controls.timeDivider.el().style.display = display;
     }.bind(this);
 
+    // proxy click events to the video element when non-linear ad is active
+    this.proxyClickEvents = function() {
+      var events = ['click', 'dblclick', 'mousedown', 'mouseup', 'touchstart',
+        'touchend'];
+      var player = this.player, el = player.el(), _this = this;
+      events.forEach(function(eventName) {
+        el.addEventListener(eventName, function(e) {
+          if (!_this.currentAd || _this.currentAd.isLinear() ||
+            e.target.nodeName!='IFRAME' || e.isTrusted) {
+            return;
+          }
+          var newEvent;
+          try {
+            newEvent = new e.constructor(e.type, extend({}, e,
+              {bubbles: false}));
+          } catch (err) {
+            // special case for IE11
+            newEvent = document.createEvent('MouseEvent');
+            newEvent.initEvent(e.type, false, true);
+          }
+          newEvent.stopPropagation();
+          player.tech_.trigger(newEvent);
+        });
+      });
+    }.bind(this);
+
     this.settings = extend({}, ima_defaults, options || {});
     this.settings.adLabel = this.player.localize(this.settings.adLabel);
 
@@ -1636,6 +1662,7 @@
       player.on('fullscreenchange', onFullscreenChange_);
       player.on('volumechange', onVolumeChange_);
     });
+    this.proxyClickEvents();
   };
 
   videojs.plugin('ima', init);
