@@ -153,7 +153,7 @@
       createControls_();
       this.adDisplayContainer =
           new google.ima.AdDisplayContainer(this.adContainerDiv, this.contentPlayer);
-      this.showAdContainer(true);
+      this.showAdContainer(!this.settings.manual);
     }.bind(this);
 
     /**
@@ -954,6 +954,7 @@
     this.playAd = function(adTag) {
       resetIMA_();
       this.settings.adTagUrl = adTag ? adTag : this.settings.adTagUrl;
+      this.showAdContainer(true);
       this.requestAds();
     }.bind(this);
 
