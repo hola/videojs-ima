@@ -1555,13 +1555,20 @@
             return;
           }
           var newEvent;
+          var opt = {};
+          for (var key in e) {
+            opt[key] = e[key];
+          }
+          opt.bubbles = false;
           try {
-            newEvent = new e.constructor(e.type, extend({}, e,
-              {bubbles: false}));
+            newEvent = new e.constructor(e.type, opt);
           } catch (err) {
             // special case for IE11
             newEvent = document.createEvent('MouseEvent');
-            newEvent.initEvent(e.type, false, true);
+            newEvent.initMouseEvent(e.type, opt.bubbles, opt.cancelable,
+              opt.view, opt.detail, opt.screenX, opt.screenY, opt.clientX,
+              opt.clientY, opt.ctrlKey, opt.altKey, opt.shiftKey, opt.metaKey,
+              opt.button, null);
           }
           newEvent.stopPropagation();
           player.tech_.trigger(newEvent);
