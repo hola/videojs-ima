@@ -1543,16 +1543,53 @@
       controls.timeDivider.el().style.display = display;
     }.bind(this);
 
+    var getPosition = function(el) {
+      var box = el.getBoundingClientRect();
+      var docEl = document.documentElement;
+      var body = document.body;
+      var clientLeft = docEl.clientLeft || body.clientLeft || 0;
+      var scrollLeft = window.pageXOffset || body.scrollLeft;
+      var left = box.left + scrollLeft - clientLeft;
+      var clientTop = docEl.clientTop || body.clientTop || 0;
+      var scrollTop = window.pageYOffset || body.scrollTop;
+      var top = box.top + scrollTop - clientTop;
+      return {
+        left: left,
+        top: top,
+        width: box.width,
+        height: box.height,
+      };
+    };
+
     // proxy click events to the video element when non-linear ad is active
     this.proxyClickEvents = function() {
-      var events = ['click', 'dblclick', 'mousedown', 'mouseup', 'touchstart',
-        'touchend'];
+      var events = (videojs.browser.IS_ANDROID || videojs.browser.IS_IOS) ?
+          ['touchstart', 'touchend'] :
+          ['click', 'dblclick', 'mousedown', 'mouseup'];
       var player = this.player, el = player.el(), _this = this;
       events.forEach(function(eventName) {
         el.addEventListener(eventName, function(e) {
-          if (!_this.currentAd || _this.currentAd.isLinear() ||
-            e.target.nodeName!='IFRAME' || e.isTrusted) {
+          var ad = _this.currentAd, t = e.target;
+          if (!ad || ad.isLinear() || t.nodeName!='IFRAME' || e.isTrusted) {
             return;
+          }
+          // ignore clicks on ad ui elements
+          var adWidth = ad.getWidth() || ad.getVastMediaWidth();
+          var adHeight = ad.getHeight() || ad.getVastMediaHeight();
+          var pos = getPosition(t);
+          var touch = e.touches && e.touches[0];
+          var x = touch ? touch.pageX : e.clientX;
+          var y = touch ? touch.pageY : e.clientY;
+          var adRight = pos.left+pos.width-(pos.width-adWidth)/2;
+          var adTop = pos.top+pos.height-adHeight-4;
+          // click on close button
+          if (x<adRight && x>(adRight-40) && y>adTop && y<(adTop+30)) {
+              return;
+          }
+          // click on recall button
+          if (x>(pos.left+pos.width/2-15) && x<(pos.left+pos.width/2+15) &&
+              y>(pos.top+pos.height-15)) {
+              return;
           }
           var newEvent;
           var opt = {};
