@@ -51,7 +51,10 @@
     prerollTimeout: 100,
     adLabel: 'Advertisement',
     showControlsForAds: true,
-    showControlsForJSAds: true
+    showControlsForJSAds: true,
+    adsRenderingSettings: {
+      uiElements: [],
+    },
   };
 
   var eventTypes = (videojs.browser.IS_ANDROID || videojs.browser.IS_IOS) ? {
