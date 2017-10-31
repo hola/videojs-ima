@@ -304,6 +304,12 @@
       this.adsManager.addEventListener(
           google.ima.AdEvent.Type.SKIPPED,
           this.onAdComplete_);
+      this.adsManager.addEventListener(
+          google.ima.AdEvent.Type.PAUSED,
+          this.onAdPaused_);
+      this.adsManager.addEventListener(
+          google.ima.AdEvent.Type.RESUMED,
+          this.onAdResumed_);
       var eventsMap = {
           'load': google.ima.AdEvent.Type.LOADED,
           'ad-started': google.ima.AdEvent.Type.STARTED,
@@ -566,6 +572,16 @@
       } else {
         this.player.removeClass('vjs-ima-non-linear');
       }
+    }.bind(this);
+
+    this.onAdPaused_ = function(adEvent) {
+      showPauseButton();
+      this.adPlaying = false;
+    }.bind(this);
+
+    this.onAdResumed_ = function(adEvent) {
+      showPlayButton();
+      this.adPlaying = true;
     }.bind(this);
 
     var formatTime = function(time) {
