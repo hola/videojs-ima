@@ -451,6 +451,20 @@
       }
     }.bind(this);
 
+    this.resetLoop = function() {
+      this.contentLoop = this.contentPlayer && this.contentPlayer.loop;
+      if (this.contentLoop) {
+        this.contentPlayer.loop = false;
+      }
+    }.bind(this);
+
+    this.restoreLoop = function() {
+      if (this.contentLoop) {
+        this.contentPlayer.loop = true;
+        this.contentLoop = false;
+      }
+    }.bind(this);
+
     /**
      * Pauses the content video and displays the ad container so ads can play.
      * @param {google.ima.AdEvent} adEvent The AdEvent thrown by the AdsManager.
@@ -458,6 +472,7 @@
      */
     this.onContentPauseRequested_ = function(adEvent) {
       this.contentSource = this.player.currentSrc();
+      this.resetLoop();
       this.player.off('contentended', this.localContentEndedListener);
       this.player.ads.startLinearAdMode();
       this.showAdContainer(true);
@@ -486,6 +501,7 @@
      */
     this.onContentResumeRequested_ = function(adEvent) {
       this.contentResumeTimer = clearTimeout(this.contentResumeTimer);
+      this.restoreLoop();
       this.adsActive = false;
       this.adPlaying = false;
       this.player.on('contentended', this.localContentEndedListener);
@@ -868,6 +884,7 @@
     var resetIMA_ = function() {
       this.adsActive = false;
       this.adPlaying = false;
+      this.restoreLoop();
       this.player.on('contentended', this.localContentEndedListener);
       if (this.currentAd && this.currentAd.isLinear()) {
         this.showAdContainer(false);
