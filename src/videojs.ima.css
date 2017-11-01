@@ -199,6 +199,7 @@
 }
 
 .video-js.vjs-ad-playing.vjs-user-inactive:not(.vjs-ad-paused) .vjs-control-bar {
+  opacity: 1;
   height: 0;
 }
 
