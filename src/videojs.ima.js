@@ -425,6 +425,9 @@
     var onAdError_ = function(adErrorEvent) {
       var errorMessage = adErrorEvent.getError !== undefined ? adErrorEvent.getError() : adErrorEvent.stack;
       window.console.log('Ad error: ' + errorMessage);
+      this.adsActive = false;
+      this.adPlaying = false;
+      this.restoreLoop();
       this.vjsControls.show();
       this.adsManager.destroy();
       this.showAdContainer(false);
