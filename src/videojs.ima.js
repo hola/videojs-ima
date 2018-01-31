@@ -258,7 +258,7 @@
       adsRequest.nonLinearAdSlotWidth =
           this.settings.nonLinearWidth || this.getPlayerWidth();
       adsRequest.nonLinearAdSlotHeight =
-          this.settings.nonLinearHeight || (this.getPlayerHeight() / 3);
+          this.settings.nonLinearHeight || this.getPlayerHeight();
 
       this.adsLoader.requestAds(adsRequest);
     }.bind(this);
