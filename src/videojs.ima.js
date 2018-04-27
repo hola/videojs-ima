@@ -259,7 +259,9 @@
           this.settings.nonLinearWidth || this.getPlayerWidth();
       adsRequest.nonLinearAdSlotHeight =
           this.settings.nonLinearHeight || this.getPlayerHeight();
-
+      adsRequest.setAdWillAutoPlay(this.player.autoplay());
+      adsRequest.setAdWillPlayMuted(this.player.muted() ||
+          this.player.volume()==0);
       this.adsLoader.requestAds(adsRequest);
     }.bind(this);
 
