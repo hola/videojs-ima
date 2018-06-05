@@ -1705,6 +1705,8 @@
     if (this.settings['locale']) {
       google.ima.settings.setLocale(this.settings['locale']);
     }
+    google.ima.settings.setDisableCustomPlaybackForIOS10Plus(
+        !!this.settings.disableCustomPlaybackForIOS10Plus);
 
     createAdContainer_();
     this.adsLoader = new google.ima.AdsLoader(this.adDisplayContainer);

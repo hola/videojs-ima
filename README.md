@@ -95,6 +95,8 @@ The plugin accepts additional settings beyond the two required settings shown in
   forceNonLinearFullSlot: <boolean> True to force non-linear AdSense ads to render as linear fullslot.
       If set, the content video will be paused and the non-linear text or image ad will be rendered as
       fullslot. The content video will resume once the ad has been skipped or closed.
+  disableCustomPlaybackForIOS10Plus: <boolean> Sets whether to disable custom playback on iOS 10+ browsers.
+      If true, ads will play inline if the content video is inline. Defaults to false.
   locale: <string> Locale for ad localization. This may be any  ISO 639-1 (two-letter) or ISO 639-2
       (three-letter) code(3). Defaults to 'en'.
   nonLinearWidth: <Number> Desired width of non-linear ads. Defaults to player width.
