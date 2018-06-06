@@ -249,3 +249,8 @@
   left: 2em;
   font-size: 1.2em;
 }
+
+.video-js.vjs-disable-fullecreen .vjs-fullscreen-control,
+.video-js.vjs-disable-fullecreen .ima-fullscreen-div {
+  display: none !important;
+}

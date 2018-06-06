@@ -433,6 +433,7 @@
       this.vjsControls.show();
       this.adsManager.destroy();
       this.showAdContainer(false);
+      this.updateFullscreenButton();
       this.updateVjsControls();
       this.player.trigger({ type: 'adserror', data: { AdError: errorMessage, AdErrorEvent: adErrorEvent }});
     }.bind(this);
@@ -476,6 +477,9 @@
      * @private
      */
     this.onContentPauseRequested_ = function(adEvent) {
+      if (this.player.isFullscreen() && !this.isFullscreenAdSupported()) {
+        this.player.exitFullscreen();
+      }
       this.contentSource = this.player.currentSrc();
       this.resetLoop();
       this.player.off('contentended', this.localContentEndedListener);
@@ -496,6 +500,7 @@
       this.player.pause();
       this.adsActive = true;
       this.adPlaying = true;
+      this.updateFullscreenButton();
       this.updateVjsControls();
     }.bind(this);
 
@@ -517,6 +522,7 @@
       this.vjsControls.show();
       this.player.ads.endLinearAdMode();
       this.countdownDiv.innerHTML = '';
+      this.updateFullscreenButton();
       this.updateVjsControls();
     }.bind(this);
 
@@ -896,6 +902,7 @@
       }
       this.vjsControls.show();
       this.player.ads.endLinearAdMode();
+      this.updateFullscreenButton();
       this.updateVjsControls();
       if (this.adTrackingTimer) {
         // If this is called while an ad is playing, stop trying to get that
@@ -1564,6 +1571,19 @@
             this.localize('Current Time')+'</span> '+formattedTime;
         }
       });
+    }.bind(this);
+
+    /* Ad can be played in fullscreen mode on iOS only if custom playback
+     * is enabled
+     * https://ads-developers.googleblog.com/2017/06/new-custom-playback-apis-for-ima-html5.html
+     */
+    this.isFullscreenAdSupported = function() {
+      return !videojs.browser.IS_IOS || this.adsManager.isCustomPlaybackUsed();
+    }.bind(this);
+
+    this.updateFullscreenButton = function() {
+      this.player.toggleClass('vjs-disable-fullecreen', this.adsActive &&
+       !this.isFullscreenAdSupported());
     }.bind(this);
 
     this.updateVjsControls = function() {
