@@ -909,6 +909,11 @@
         // ad's current time.
         clearInterval(this.adTrackingTimer);
       }
+      // Reset the content time we give the SDK. Fixes an issue where requesting
+      // VMAP followed by VMAP would play the second mid-rolls as pre-rolls if
+      // the first playthrough of the video passed the second response's
+      // mid-roll time.
+      this.contentPlayheadTracker.currentTime = 0;
       if (this.adsManager) {
         this.adsManager.destroy();
         this.adsManager = null;
@@ -1094,31 +1099,13 @@
     }.bind(this);
 
     /**
-     * Updates the start time of the video
-     * @private
-     */
-    var updateStartTime_ = function(){
-        var cur = this.player.currentTime();
-        if (!cur || this.player.ads.state!='content-playback')
-            return;
-        // first time that isn't zero is our start time, but only if it's
-        // more than the 1sec
-        if (cur<1)
-            cur = 0;
-        this.contentPlayheadTracker.startTime = cur;
-        this.player.off('timeupdate', updateStartTime_);
-    }.bind(this);
-
-    /**
      * Updates the current time of the video
      * @private
      */
     var updateCurrentTime_ = function() {
       if (this.player.ads.state=='content-playback' &&
-          !this.contentPlayheadTracker.seeking &&
-          this.contentPlayheadTracker.startTime>=0) {
-        this.contentPlayheadTracker.currentTime = this.player.currentTime() -
-            this.contentPlayheadTracker.startTime;
+          !this.contentPlayheadTracker.seeking) {
+        this.contentPlayheadTracker.currentTime = this.player.currentTime();
       }
     }.bind(this);
 
@@ -1378,8 +1365,7 @@
       currentTime: 0,
       previousTime: 0,
       seeking: false,
-      duration: 0,
-      startTime: -1
+      duration: 0
     };
 
     /**
@@ -1457,7 +1443,6 @@
       this.contentEndedListeners, this.contentAndAdsEndedListeners = [], [];
       this.contentComplete = true;
       this.player.off('contentended', this.localContentEndedListener);
-      this.player.off('timeupdate', updateStartTime_);
 
       // Bug fix: https://github.com/googleads/videojs-ima/issues/306
       if (this.player.ads.adTimeoutTimeout) {
@@ -1712,7 +1697,6 @@
     player.one('play', setUpPlayerIntervals_);
     player.on('contentended', this.localContentEndedListener);
     player.on('dispose', this.playerDisposedListener);
-    player.on('timeupdate', updateStartTime_);
     this.adsRenderingSettings = new google.ima.AdsRenderingSettings();
     this.adsRenderingSettings.restoreCustomPlaybackStateOnAdBreakComplete = true;
     if (this.settings['adsRenderingSettings']) {
