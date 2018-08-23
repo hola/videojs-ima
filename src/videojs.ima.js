@@ -655,15 +655,11 @@
     }.bind(this);
 
     this.getPlayerWidth = function() {
-      var retVal = parseInt(getComputedStyle(this.player.el()).width, 10) ||
-          this.player.width();
-      return retVal;
+      return this.player.el().offsetWidth || this.player.width();
     }.bind(this);
 
     this.getPlayerHeight = function() {
-      var retVal = parseInt(getComputedStyle(this.player.el()).height, 10) ||
-          this.player.height();
-      return retVal;
+      return this.player.el().offsetHeight || this.player.height();
     }.bind(this);
 
     /**
