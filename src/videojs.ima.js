@@ -215,6 +215,8 @@
       this.sliderDiv.appendChild(this.sliderLevelDiv);
       if (this.settings.vjsControls) {
         this.initVjsControls();
+        if (this.player.dvr)
+          this.player.one('dvrReady', this.initVjsControls.bind(this));
         this.controlsDiv.style.display = 'none';
         this.vjsControls.el().appendChild(this.countdownDiv);
       } else {
