@@ -1094,14 +1094,26 @@
           setInterval(checkForResize_, this.resizeCheckInterval);
     }.bind(this);
 
+    var updateLiveOffset_ = function() {
+      var cur = this.player.currentTime();
+      if (!cur || this.player.ads.state!='content-playback')
+        return;
+      if (this.player.duration()!=Infinity || cur<0)
+        cur = 0;
+      this.contentPlayheadTracker.liveOffset = cur;
+      this.player.off('timeupdate', updateLiveOffset_);
+    }.bind(this);
+
     /**
      * Updates the current time of the video
      * @private
      */
     var updateCurrentTime_ = function() {
       if (this.player.ads.state=='content-playback' &&
-          !this.contentPlayheadTracker.seeking) {
-        this.contentPlayheadTracker.currentTime = this.player.currentTime();
+          !this.contentPlayheadTracker.seeking &&
+          this.contentPlayheadTracker.liveOffset>=0) {
+        this.contentPlayheadTracker.currentTime = this.player.currentTime()-
+            this.contentPlayheadTracker.liveOffset;
       }
     }.bind(this);
 
@@ -1361,7 +1373,8 @@
       currentTime: 0,
       previousTime: 0,
       seeking: false,
-      duration: 0
+      duration: 0,
+      liveOffset: 0
     };
 
     /**
@@ -1439,6 +1452,7 @@
       this.contentEndedListeners, this.contentAndAdsEndedListeners = [], [];
       this.contentComplete = true;
       this.player.off('contentended', this.localContentEndedListener);
+      this.player.off('timeupdate', updateLiveOffset_);
 
       // Bug fix: https://github.com/googleads/videojs-ima/issues/306
       if (this.player.ads.adTimeoutTimeout) {
@@ -1693,6 +1707,7 @@
     player.one('play', setUpPlayerIntervals_);
     player.on('contentended', this.localContentEndedListener);
     player.on('dispose', this.playerDisposedListener);
+    player.on('timeupdate', updateLiveOffset_);
     this.adsRenderingSettings = new google.ima.AdsRenderingSettings();
     this.adsRenderingSettings.restoreCustomPlaybackStateOnAdBreakComplete = true;
     if (this.settings['adsRenderingSettings']) {
