@@ -1376,7 +1376,7 @@
       previousTime: 0,
       seeking: false,
       duration: 0,
-      liveOffset: 0
+      liveOffset: -1
     };
 
     /**
