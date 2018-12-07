@@ -1475,25 +1475,50 @@
       }
     }.bind(this);
 
+    var offOnHandler = function(obj, target, event, off, on){
+      if (target) {
+        obj.off(target, event, off);
+        obj.on(target, event, on);
+      } else {
+        obj.off(event, off);
+        obj.on(event, on);
+      }
+    };
+
+    this.uninitVjsControls = function() {
+      if (this.overrides) {
+        this.overrides.forEach(function(o){
+          o.obj[o.method] = o.orig;
+        });
+      }
+      if (this.overrideHandlers) {
+        this.overrideHandlers.forEach(function(o){
+          if (!o.obj.el_)
+            return;
+          offOnHandler(o.obj, o.target, o.event, o.handler, o.orig);
+        });
+      }
+    }.bind(this);
+
     this.initVjsControls = function() {
+      this.uninitVjsControls();
       var _this = this;
+      this.overrides = [];
       var override = function(cls, obj, method, fn, always) {
         var orig = cls.prototype[method];
+        _this.overrides.push({obj: obj, method: method, orig: orig});
         return obj[method] = function() {
           return _this.adsActive || always ? fn && fn.apply(this, arguments) :
             orig && orig.apply(this, arguments);
         };
       };
+      this.overrideHandlers = [];
       var overrideHandler = function(cls, obj, target, event, method, fn, always) {
         var orig = cls.prototype[method];
         var handler = override(cls, obj, method, fn);
-        if (target) {
-          obj.off(target, event, orig);
-          obj.on(target, event, handler);
-        } else {
-          obj.off(event, orig);
-          obj.on(event, handler);
-        }
+        _this.overrideHandlers.push({obj: obj, target: target, event: event,
+          handler: handler, orig: orig});
+        offOnHandler(obj, target, event, orig, handler);
       };
       var PlayToggle = videojs.getComponent('PlayToggle');
       var playToggle = this.vjsControls.playToggle;
