@@ -75,6 +75,7 @@
 
   var ImaPlugin = function(player, options, readyCallback) {
     this.player = player;
+    this.viewableImpression = new ExperimentalViewableImpression(options);
 
     /**
      * Assigns the unique id and class names to the given element as well as the style class
@@ -238,6 +239,7 @@
       this.adDisplayContainer.initialize();
     }.bind(this);
 
+
     /**
      * Creates the AdsRequest and request ads through the AdsLoader.
      */
@@ -245,11 +247,22 @@
       if (!this.adDisplayContainerInitialized) {
         this.adDisplayContainer.initialize();
       }
+
       var adsRequest = new google.ima.AdsRequest();
+      var customLoad;
       if (this.settings.adTagUrl) {
         adsRequest.adTagUrl = this.settings.adTagUrl;
       } else {
-        adsRequest.adsResponse = this.settings.adsResponse;
+        var adsResponse = this.settings.adsResponse;
+        customLoad = this.viewableImpression.initialize(adsResponse,
+          function(customAdsResponse) {
+            adsRequest.adsResponse = customAdsResponse || adsResponse;
+            this.adsLoader.requestAds(adsRequest);
+          }.bind(this));
+
+        if (!customLoad) {
+          adsRequest.adsResponse = this.settings.adsResponse;
+        }
       }
       if (this.settings.forceNonLinearFullSlot) {
         adsRequest.forceNonLinearFullSlot = true;
@@ -264,7 +277,9 @@
       adsRequest.setAdWillAutoPlay(this.player.autoplay());
       adsRequest.setAdWillPlayMuted(this.player.muted() ||
           this.player.volume()==0);
-      this.adsLoader.requestAds(adsRequest);
+      if (!customLoad) {
+        this.adsLoader.requestAds(adsRequest);
+      }
     }.bind(this);
 
     /**
@@ -276,6 +291,8 @@
     var onAdsManagerLoaded_ = function(adsManagerLoadedEvent) {
       this.adsManager = adsManagerLoadedEvent.getAdsManager(
           this.contentPlayheadTracker, this.adsRenderingSettings);
+
+      this.viewableImpression.attach(this.adContainerDiv, this.adsManager);
 
       this.adsManager.addEventListener(
           google.ima.AdErrorEvent.Type.AD_ERROR,
@@ -1793,6 +1810,240 @@
       player.on('volumechange', onVolumeChange_);
     });
     this.proxyClickEvents();
+  };
+
+  function ExperimentalViewableImpression(options) {
+    var MIN_VIEWABLE = 2; /* min number of seconds to report as viewable */
+    this.conf = null;
+    this.position = null;
+    this.urls = [];
+    this.opt = options.experimental_viewable_impression;
+    this.enabled = this.opt && !this.opt.disable;
+
+    this.initialize = function(adsResponse, callback) {
+      if (!this.enabled) {
+        return false;
+      }
+      try {
+        return this._initialize(adsResponse, callback);
+      } catch(err) {
+        return false;
+      }
+    }.bind(this);
+
+    this._initialize = function(adsResponse, callback) {
+      var parser = new DOMParser();
+      var adsXML = parser.parseFromString(adsResponse, 'text/xml');
+      var adTags = adsXML.getElementsByTagName('vmap:AdTagURI');
+      var vast4Tags = [];
+      for (var i=0; i<adTags.length; i++) {
+        if (/vast4/.test(adTags[i].getAttribute('templateType'))) {
+          vast4Tags.push(adTags[i]);
+        }
+      }
+      if (!vast4Tags.length) {
+        return false;
+      }
+      var count = 0, anyChanged;
+      for (var i=0; i<vast4Tags.length; i++) {
+        this._requestAdTag(vast4Tags[i], i, function(changed) {
+          anyChanged = anyChanged || changed;
+          if (++count==vast4Tags.length) {
+            if (!anyChanged) {
+              callback();
+              return;
+            }
+            var ret;
+            try {
+              var serializer = new XMLSerializer();
+              ret = serializer.serializeToString(adsXML.documentElement);
+            } catch(err) {}
+            callback(ret);
+          }
+        });
+      }
+      return true;
+    }.bind(this);
+
+    this._checkAdUrl = function(url) {
+      return !this.opt.ad_urls || this.opt.ad_urls.find(function(r) {
+        return new RegExp(r).test(url);
+      });
+    }.bind(this);
+
+    this._requestAdTag = function(tag, index, callback) {
+      var adUrl = this._convertUrl(tag.textContent);
+      if (!this._checkAdUrl(adUrl)) {
+        callback(false);
+        return;
+      }
+
+      videojs.xhr(adUrl, {withCredentials: true, timeout: 3000},
+        function(err, response, body){
+
+        if (err || response.statusCode!=200) {
+          callback(false);
+          return;
+        }
+        var ret = false;
+        try {
+          var xml = response.rawRequest.responseXML;
+          // XXX: support fallbacks, use getWrapperAdIds from impression hook
+          var ad = xml.getElementsByTagName('Ad')[0];
+          if (ad) {
+            var adUriTag = ad.getElementsByTagName('VASTAdTagURI')[0];
+            var adUri;
+            if (adUriTag && (adUri = this._convertUrl(adUriTag.textContent)) &&
+                this._checkAdUrl(adUri)) {
+
+              videojs.xhr(adUri, {withCredentials: true},
+                  function(err, response, body) {
+
+                  if (!err && response.statusCode==200) {
+                    this._setAd(index, response.rawRequest.responseXML);
+                  }
+              }.bind(this));
+            } else {
+              this._setAd(index, ad);
+            }
+            var parent = tag.parentElement;
+            parent.removeChild(tag);
+            var adData = xml.createElement('vmap:VASTAdData');
+            adData.appendChild(xml.documentElement);
+            parent.appendChild(adData);
+            ret = true;
+          }
+        } catch(err) {}
+        callback(ret);
+      }.bind(this));
+    }.bind(this);
+
+    this._convertUrl = function(url) {
+      return encodeURI(url.trim()
+        .replace(/\[referrer_url\]/i, window.location.href)
+        .replace(/\[timestamp\]/i,
+          encodeURIComponent(new Date().toISOString()))
+        .replace(/\[[^\]]+\]/, function(x) { return encodeURIComponent(x); }));
+    }.bind(this);
+
+    this._setAd = function(index, ad) {
+      var found = ad.getElementsByTagName('ViewableImpression')[0];
+      if (!found)
+        return;
+      var urls = this.urls[index] = {};
+      var get_url = function(key, tag_name){
+        var tag = found.getElementsByTagName(tag_name)[0];
+        if (tag) {
+          urls[key] = tag.textContent.trim();
+        }
+      }.bind(this);
+      get_url('viewable', 'Viewable');
+      get_url('not_viewable', 'NotViewable');
+      get_url('view_undetermined', 'ViewUndetermined');
+    }.bind(this);
+
+    this._makeReport = function(type) {
+      var url = this.urls[this.index] && this.urls[this.index][type];
+      if (url) {
+        var img = new Image();
+        img.src = this._convertUrl(url);
+      }
+    }.bind(this);
+
+    this._isVisible = function(container) {
+      var steps = 6;
+      var rect = container.getBoundingClientRect();
+      var limit = function(val, max){
+        return Math.max(2, Math.min(val, max-2));
+      };
+      var total = 0, ok = 0;
+      for (var i=0; i<=steps; i++) {
+        for (var j=0; j<=steps; j++) {
+          total++;
+          var el = document.elementFromPoint(rect.left
+              +limit(rect.width*i/steps, rect.width),
+              rect.top+limit(rect.height*j/steps, rect.height));
+          while (el && el!=container) {
+            el = el.parentNode;
+          }
+          if (el==container) {
+            ok++;
+          }
+        }
+      }
+      return ok/total>0.5;
+    }.bind(this);
+
+    this._onViewableImpression = function(evt) {
+      var ad = evt.getAd(), id = ad.getAdId(), info = ad.getAdPodInfo();
+      var index = info.getPodIndex(), position = info.getAdPosition();
+      if (index==this.index && position==this.position) {
+        this.position = null; // cancel manual detection
+      }
+    }.bind(this);
+
+    this._onImpression = function(evt) {
+      var ad = evt.getAd(), id = ad.getAdId(), info = ad.getAdPodInfo();
+      this.index = info.getPodIndex();
+      this.position = info.getAdPosition();
+      this.conf = {pos: 0, total: 0, viewable: 0, reported: false,
+          start: Date.now()};
+    }.bind(this);
+
+    this._onAdProgress = function(evt) {
+      var data = evt.getAdData();
+      if (!this.conf || this.position!=data.adPosition) {
+        return;
+      }
+      var diff = data.currentTime-this.conf.pos;
+      if (diff<=0) {
+        return;
+      }
+      this.conf.pos = data.currentTime;
+      this.conf.total += diff;
+      try {
+        if (this._isVisible(this.adContainer)) {
+          this.conf.viewable += diff;
+        }
+      } catch(err) {
+        this.conf.undetermined = true;
+      }
+      if (!this.conf.reported && this.conf.viewable>=MIN_VIEWABLE &&
+          Date.now()-this.conf.start>MIN_VIEWABLE*1000) {
+        this.conf.reported = true;
+        this._makeReport('viewable');
+      }
+    }.bind(this);
+
+    this._onComplete = function(evt) {
+      var position = evt.getAd().getAdPodInfo().getAdPosition();
+      if (!this.conf || this.position!=position) {
+        return;
+      }
+      this.position = null;
+      if (!this.conf.reported) {
+        this._makeReport(this.conf.undetermined ? 'view_undetermined' :
+            'not_viewable');
+        this.conf = null;
+      }
+    }.bind(this);
+
+    this.attach = function(adContainer, adsManager) {
+      if (!this.enabled) {
+        return;
+      }
+      this.adContainer = adContainer;
+      adsManager.addEventListener(google.ima.AdEvent.Type.VIEWABLE_IMPRESSION,
+          this._onViewableImpression);
+      adsManager.addEventListener(google.ima.AdEvent.Type.IMPRESSION,
+          this._onImpression);
+      adsManager.addEventListener(google.ima.AdEvent.Type.AD_PROGRESS,
+          this._onAdProgress);
+      adsManager.addEventListener(google.ima.AdEvent.Type.COMPLETE,
+          this._onComplete);
+      adsManager.addEventListener(google.ima.AdEvent.Type.SKIPPED,
+          this._onComplete);
+    }.bind(this);
   };
 
   videojs.plugin('ima', init);
